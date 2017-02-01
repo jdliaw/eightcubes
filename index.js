@@ -31,14 +31,14 @@ var cube_position = [
 //8 cube colors to cycle through
 var cubeColor = 0;
 var vertexColors = [
-    [0.8, 0.2, 0.0, 0.6],  // orange
+    [0.8, 0.5, 0.0, 1.0],  // orange
     [1.0, 0.0, 0.0, 1.0],  // red
     [1.0, 1.0, 0.0, 1.0],  // yellow
     [0.0, 1.0, 0.0, 1.0],  // green
     [0.0, 0.0, 1.0, 1.0],  // blue
     [1.0, 0.0, 1.0, 1.0],  // magenta
     [0.0, 1.0, 1.0, 1.0],  // cyan
-    [1.0, 1.0, 1.0, 1.0]   // white
+    [1.0, 0.0, 0.6, 1.0]   // pink
 ];
 
 window.onload = function init() {
@@ -82,6 +82,21 @@ window.onload = function init() {
   projection_transform_loc = gl.getUniformLocation(program, "projection_transform");
   projection_matrix = perspective(45, canvas.width / canvas.height, 0.001, 1000);
   gl.uniformMatrix4fv(projection_transform_loc, false, flatten(projection_matrix));
+
+  window.onkeydown = function(e) {
+    var key;
+    if(e.keyCode) {
+      key = e.keyCode;
+    }
+    else {
+      key = e.which;
+    }
+
+    if(key == 67) {
+      cubeColor++;
+      render();
+    }
+  }
 
   render();
 }
@@ -134,7 +149,7 @@ function render() {
       gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
 
       var colorLoc = gl.getUniformLocation(program, "vColor");
-      var color = vec4(vertexColors[i], 1.0);
+      var color = vec4(vertexColors[(i+cubeColor) % 8], 1.0);
       gl.uniform4fv(colorLoc, color);
 
       var model_transform = mat4();
