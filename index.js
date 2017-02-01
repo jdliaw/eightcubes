@@ -16,6 +16,23 @@ var projection_matrix;
 var program;
 var vBuffer;
 
+var yPos = 0;
+
+// Key constants
+var C_KEY = 67;
+var UP_KEY = 38;
+var DOWN_KEY = 40;
+var LEFT_KEY = 37
+var RIGHT_KEY = 39
+var I_KEY = 73;
+var J_KEY = 74;
+var K_KEY = 75;
+var M_KEY = 77;
+var R_KEY = 82;
+var N_KEY = 78;
+var W_KEY = 87;
+var PLUS_KEY = 187;
+
 //8 cube positions
 var cube_position = [
     vec3(10, 10, 10),
@@ -83,18 +100,27 @@ window.onload = function init() {
   projection_matrix = perspective(45, canvas.width / canvas.height, 0.001, 1000);
   gl.uniformMatrix4fv(projection_transform_loc, false, flatten(projection_matrix));
 
+  // key bindings
   window.onkeydown = function(e) {
     var key;
-    if(e.keyCode) {
+
+    if (e.keyCode) {
       key = e.keyCode;
     }
     else {
       key = e.which;
     }
 
-    if(key == 67) {
+    if (key == C_KEY) { // toggle colors
       cubeColor++;
       render();
+    }
+
+    if(key == UP_KEY) { // move up
+      yPos += 0.25;
+    }
+    if (key == DOWN_KEY) { // move down
+      yPos -= 0.25;
     }
   }
 
@@ -154,10 +180,12 @@ function render() {
 
       var model_transform = mat4();
       model_transform = mult(model_transform, translate(cube_position[i]));
+      model_transform = mult(model_transform, translate(0, yPos, 0));
 
       gl.uniformMatrix4fv(model_transform_loc, false, flatten(model_transform));
 
       gl.drawArrays(gl.TRIANGLES, 0, NumVertices);
+      gl.drawArrays(gl.LINES, 0, NumVertices);
   }
 
   // var model_transform = translate(0, 0, 0);
