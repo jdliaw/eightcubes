@@ -1,17 +1,8 @@
 <!DOCTYPE HTML>
 <html>
 
-<!-- Set up a WebGL capable HTML canvas able to display without error. Its size should be at least 960x540 and should have the z-buffer enabled and cleared to a black background. Implement necessary shader codes without error – 5 points. -->
-
-<!-- Display eight (8) unit cubes using a symmetric perspective projection. Each of the eight cubes should be centered at (+/- 10, +/- 10, +/- 10) from the origin. Each of the eight cubes should be drawn with a different color. You can use any colors except black or white. All eight cubes should be visible from an initial camera position along the Z axis - 20 points. -->
-
 <script id="vertex-shader" type="x-shader/x-vertex">
   attribute vec4 vPosition;
-  // attribute vec4 vColor;
-  // varying vec4 fColor;
-
-  // uniform mat4 mvMatrix;
-  // uniform mat4 pMatrix;
 
   uniform mat4 model_transform;
   uniform mat4 camera_transform;

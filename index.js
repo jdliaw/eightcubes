@@ -16,7 +16,10 @@ var projection_matrix;
 var program;
 var vBuffer;
 
+// variables controlled by keys
 var yPos = 0;
+var xAngle = 0;
+var fovAngle = 45; // default FOV
 
 // Key constants
 var C_KEY = 67;
@@ -75,14 +78,6 @@ window.onload = function init() {
   program = initShaders(gl, "vertex-shader", "fragment-shader");
   gl.useProgram(program);
 
-  // var cBuffer = gl.createBuffer();
-  // gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
-  // gl.bufferData( gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW );
-
-  // var vColor = gl.getAttribLocation( program, "vColor" );
-  // gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
-  // gl.enableVertexAttribArray( vColor );
-
   vBuffer = gl.createBuffer();
   gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
   gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
@@ -97,8 +92,8 @@ window.onload = function init() {
 
   //projection matrix
   projection_transform_loc = gl.getUniformLocation(program, "projection_transform");
-  projection_matrix = perspective(45, canvas.width / canvas.height, 0.001, 1000);
-  gl.uniformMatrix4fv(projection_transform_loc, false, flatten(projection_matrix));
+  // projection_matrix = perspective(45, canvas.width / canvas.height, 0.001, 1000);
+  // gl.uniformMatrix4fv(projection_transform_loc, false, flatten(projection_matrix));
 
   // key bindings
   window.onkeydown = function(e) {
@@ -116,11 +111,31 @@ window.onload = function init() {
       render();
     }
 
-    if(key == UP_KEY) { // move up
+    if (key == UP_KEY) { // move up
       yPos += 0.25;
     }
     if (key == DOWN_KEY) { // move down
       yPos -= 0.25;
+    }
+
+    if (key == RIGHT_KEY) { // azimuth right
+      xAngle++;
+    }
+    if (key == LEFT_KEY) {
+      xAngle--;
+    }
+
+    if (key == R_KEY) { // reset FOV
+      yPos = 0;
+      xAngle = 0;
+      fovAngle = 45;
+    }
+
+    if (key == N_KEY) { // narrow FOV, scene shrinks
+      fovAngle++;
+    }
+    if (key == W_KEY) { // widen FOV
+      fovAngle--;
     }
   }
 
@@ -148,15 +163,6 @@ function quad(a, b, c, d) {
     vec4(  0.5, -0.5, -0.5, 1.0 )
   ];
 
-  // var vertexColors = [
-  //   [1.0,  1.0,  1.0,  1.0],    // Front face: white
-  //   [1.0,  0.0,  0.0,  1.0],    // Back face: red
-  //   [0.0,  1.0,  0.0,  1.0],    // Top face: green
-  //   [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
-  //   [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
-  //   [1.0,  0.0,  1.0,  1.0]     // Left face: purple
-  // ];
-
   var indices = [ a, b, c, a, c, d ];
 
   for ( var i = 0; i < indices.length; ++i ) {
@@ -182,17 +188,15 @@ function render() {
       model_transform = mult(model_transform, translate(cube_position[i]));
       model_transform = mult(model_transform, translate(0, yPos, 0));
 
+      projection_matrix = perspective(fovAngle, canvas.width / canvas.height, 0.001, 1000);
+      projection_matrix = mult(projection_matrix, rotate(xAngle, 0, 1, 0));
+
+      gl.uniformMatrix4fv(projection_transform_loc, false, flatten(projection_matrix));
       gl.uniformMatrix4fv(model_transform_loc, false, flatten(model_transform));
 
       gl.drawArrays(gl.TRIANGLES, 0, NumVertices);
       gl.drawArrays(gl.LINES, 0, NumVertices);
   }
-
-  // var model_transform = translate(0, 0, 0);
-
-  // gl.uniformMatrix4fv(model_transform_location, false, flatten(model_transform));
-
-  // gl.drawArrays(gl.TRIANGLES, 0, NumVertices);
 
   requestAnimFrame( render );
 }
