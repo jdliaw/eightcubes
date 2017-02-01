@@ -513,7 +513,7 @@ function dot( u, v )
 
 function negate( u )
 {
-    var result = [];
+    result = [];
     for ( var i = 0; i < u.length; ++i ) {
         result.push( -u[i] );
     }
@@ -544,7 +544,7 @@ function cross( u, v )
 
 //----------------------------------------------------------------------------
 
-function length( u )
+function length1( u )
 {
     return Math.sqrt( dot(u, u) );
 }
@@ -557,7 +557,7 @@ function normalize( u, excludeLastComponent )
         var last = u.pop();
     }
     
-    var len = length( u );
+    var len = length1( u );
 
     if ( !isFinite(len) ) {
         throw "normalize: vector " + u + " has zero length";
@@ -588,7 +588,7 @@ function mix( u, v, s )
 
     var result = [];
     for ( var i = 0; i < u.length; ++i ) {
-        result.push( (1.0 - s) * u[i] +  s * v[i] );
+        result.push( s * u[i] + (1.0 - s) * v[i] );
     }
 
     return result;
@@ -599,13 +599,13 @@ function mix( u, v, s )
 // Vector and Matrix functions
 //
 
-function scale( s, u )
+function scale1( s, u )
 {
     if ( !Array.isArray(u) ) {
         throw "scale: second parameter " + u + " is not a vector";
     }
 
-    var result = [];
+    result = [];
     for ( var i = 0; i < u.length; ++i ) {
         result.push( s * u[i] );
     }

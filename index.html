@@ -5,6 +5,33 @@
 
 <!-- Display eight (8) unit cubes using a symmetric perspective projection. Each of the eight cubes should be centered at (+/- 10, +/- 10, +/- 10) from the origin. Each of the eight cubes should be drawn with a different color. You can use any colors except black or white. All eight cubes should be visible from an initial camera position along the Z axis - 20 points. -->
 
+<script id="vertex-shader" type="x-shader/x-vertex">
+  attribute vec4 vPosition;
+  // attribute vec4 vColor;
+  // varying vec4 fColor;
+
+  // uniform mat4 mvMatrix;
+  // uniform mat4 pMatrix;
+
+  uniform mat4 model_transform;
+  uniform mat4 camera_transform;
+  uniform mat4 projection_transform;
+
+  void main() {
+    gl_Position = projection_transform * camera_transform * model_transform * vPosition;
+    gl_Position.z = -gl_Position.z;
+  }
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+  precision mediump float;
+  uniform vec4 vColor;
+
+  void main() {
+    gl_FragColor = vColor;
+  }
+</script>
+
 <script type="text/javascript" src="webgl-utils.js"></script>
 <script type="text/javascript" src="initShaders.js"></script>
 <script type="text/javascript" src="MV.js"></script>
