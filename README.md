@@ -2,7 +2,7 @@
 
 ### Jennifer Liaw 004454638
 
-#### Please grade the version tagged v1.2
+#### Please grade the version tagged v1.3
 
 #### What was implemented?
     (1) Display a WebGL canvas without error
