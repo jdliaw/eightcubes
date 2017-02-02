@@ -7,6 +7,7 @@ var NumVertices = 36;
 
 var colors = [];
 var points = [];
+var vPosition;
 
 var model_transform_loc;
 var camera_transform_loc;
@@ -16,6 +17,8 @@ var projection_matrix;
 var program;
 var vBuffer;
 var lBuffer;
+var chBuffer;
+var j = 0;
 
 // variables controlled by keys
 var yPos = 0;
@@ -23,7 +26,7 @@ var xAngle = 0;
 var zPos = 0;
 var xPos = 0;
 var fovAngle = 45; // default FOV
-var crosshairToggle = 0;
+var crosshairToggle = false;
 var adjustedX;
 var adjustedZ;
 
@@ -67,26 +70,98 @@ var vertexColors = [
     [1.0, 0.0, 0.6, 1.0]   // pink
 ];
 
+var rotationAxis = [
+  [1, 0, 0],
+  [0, 1, 0],
+  [0, 0, 1],
+  [0, 1, 0],
+  [1, 0, 0],
+  [0, 0, 1],
+  [0, 1, 0],
+  [1, 0, 0]
+];
+
+var scaleSelect = [
+  [.82, .82, .82],
+  [.84, .84, .84],
+  [.86, .86, .86],
+  [.88, .88, .88],
+  [.90, .90, .90],
+  [.92, .92, .92],
+  [.94, .94, .94],
+  [.96, .96, .96],
+  [.98, .98, .98],
+  [1.0, 1.0, 1.0],
+  [1.02, 1.02, 1.02],
+  [1.04, 1.04, 1.04],
+  [1.06, 1.06, 1.06],
+  [1.08, 1.08, 1.08],
+  [1.10, 1.10, 1.10],
+  [1.12, 1.12, 1.12],
+  [1.14, 1.14, 1.14],
+  [1.16, 1.16, 1.16]
+];
+
+// var edge_vertices = [
+//   vec4(-0.5, -0.5,  1.5, 1.0),//1
+//   vec4(-0.5,  0.5,  1.5, 1.0),//2
+//   vec4(-0.5, -0.5,  1.5, 1.0),//1
+//   vec4(0.5, -0.5,  1.5, 1.0),//4
+//   vec4(-0.5, -0.5,  1.5, 1.0),//1
+//   vec4(-0.5, -0.5, 0.5, 1.0),//5
+//   vec4(-0.5,  0.5,  1.5, 1.0),//2
+//   vec4(0.5,  0.5,  1.5, 1.0),//3
+//   vec4(-0.5,  0.5,  1.5, 1.0),//2
+//   vec4(-0.5,  0.5, 0.5, 1.0),//6
+//   vec4(0.5,  0.5,  1.5, 1.0),//3
+//   vec4(0.5, -0.5,  1.5, 1.0),//4
+//   vec4(0.5,  0.5,  1.5, 1.0),//3
+//   vec4(0.5,  0.5, 0.5, 1.0),//7
+//   vec4(0.5, -0.5,  1.5, 1.0),//4
+//   vec4( 0.5, -0.5, 0.5, 1.0), //8
+//   vec4(-0.5, -0.5, 0.5, 1.0),//5
+//   vec4(-0.5,  0.5, 0.5, 1.0),//6
+//   vec4(-0.5, -0.5, 0.5, 1.0),//5
+//   vec4( 0.5, -0.5, 0.5, 1.0), //8
+//   vec4(-0.5,  0.5, 0.5, 1.0),//6
+//   vec4(0.5,  0.5, 0.5, 1.0),//7
+//   vec4(0.5,  0.5, 0.5, 1.0),//7
+//   vec4( 0.5, -0.5, 0.5, 1.0) //8
+// ];
+
 var edge_vertices = [
-  vec4(0.0, 0.0,  0.0, 1.0),
-  vec4(5.0,  0.0,  0.0, 1.0),
-  vec4(0.0, 0.0,  0.0, 1.0),
-  vec4(0.0,  5.0,  0.0, 1.0),
-  vec4(0.0, 0.0,  0.0, 1.0),
-  vec4(0.0,  0.0,  5.0, 1.0),
-  vec4(0.0, 0.0,  0.0, 1.0),
-  vec4(-5.0,  0.0,  0.0, 1.0),
-  vec4(0.0, 0.0,  0.0, 1.0),
-  vec4(0.0,  -5.0,  0.0, 1.0),
-  vec4(0.0, 0.0,  0.0, 1.0),
-  vec4(0.0,  0.0,  -5.0, 1.0)
+  vec4( -0.5, -0.5,  0.5, 1.0 ),
+  vec4( -0.5,  0.5,  0.5, 1.0 ),//
+  vec4( -0.5,  0.5,  0.5, 1.0 ),
+  vec4(  0.5,  0.5,  0.5, 1.0 ),//
+  // vec4(  0.5,  0.5,  0.5, 1.0 ),
+  // vec4(  0.5, -0.5,  0.5, 1.0 ),//
+  // vec4(  0.5, -0.5,  0.5, 1.0 ),
+  // vec4( -0.5, -0.5,  0.5, 1.0 ),//
+//   // vec4( -0.5, -0.5, -0.5, 1.0 ),
+//   // vec4( -0.5,  0.5, -0.5, 1.0 ),
+//   // vec4(  0.5,  0.5, -0.5, 1.0 ),
+//   // vec4(  0.5, -0.5, -0.5, 1.0 )
+//   //
+//   // vec4(0.0, 0.0,  0.0, 1.0),
+//   // vec4(5.0,  0.0,  0.0, 1.0),
+//   // vec4(0.0, 0.0,  0.0, 1.0),
+//   // vec4(0.0,  5.0,  0.0, 1.0),
+//   // vec4(0.0, 0.0,  0.0, 1.0),
+//   // vec4(0.0,  0.0,  5.0, 1.0),
+//   // vec4(0.0, 0.0,  0.0, 1.0),
+//   // vec4(-5.0,  0.0,  0.0, 1.0),
+//   // vec4(0.0, 0.0,  0.0, 1.0),
+//   // vec4(0.0,  -5.0,  0.0, 1.0),
+//   // vec4(0.0, 0.0,  0.0, 1.0),
+//   // vec4(0.0,  0.0,  -5.0, 1.0)
 ];
 
 var crosshair_vertices = [
-  vec3(10, 0, 0),
-  vec3(0, 10, 0),
-  vec3(0, 0, 10),
-  vec3(0, 0, -10)
+  vec2(1.0, 0),
+  vec2(-1.0, 0),
+  vec2(0, 1.0),
+  vec2(0, -1.0)
 ];
 
 window.onload = function init() {
@@ -110,15 +185,20 @@ window.onload = function init() {
   gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
   gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
 
-  var vPosition = gl.getAttribLocation( program, "vPosition" );
+  vPosition = gl.getAttribLocation( program, "vPosition" );
   gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
   gl.enableVertexAttribArray( vPosition );
 
-  lBuffer = gl.createBuffer(); // for edges outline
-  gl.bindBuffer(gl.ARRAY_BUFFER, lBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, flatten(edge_vertices), gl.STATIC_DRAW);
+  // crosshair points
+  // chBuffer = gl.createBuffer();
+  // gl.bindBuffer( gl.ARRAY_BUFFER, chBuffer );
+  // gl.bufferData( gl.ARRAY_BUFFER, flatten(crosshair_vertices), gl.STATIC_DRAW );
 
-  var lPosition = gl.getAttribLocation(program, "vPosition");
+  // lBuffer = gl.createBuffer(); // for edges outline
+  // gl.bindBuffer(gl.ARRAY_BUFFER, lBuffer);
+  // gl.bufferData(gl.ARRAY_BUFFER, flatten(edge_vertices), gl.STATIC_DRAW);
+
+  // var lPosition = gl.getAttribLocation(program, "vPosition");
 
   model_transform_loc = gl.getUniformLocation(program, "model_transform");
   camera_transform_loc = gl.getUniformLocation(program, "camera_transform");
@@ -139,6 +219,7 @@ window.onload = function init() {
     else {
       key = e.which;
     }
+    // console.log(key);
 
     if (key == C_KEY) { // toggle colors
       cubeColor++;
@@ -199,8 +280,7 @@ window.onload = function init() {
     }
 
     if (key == PLUS_KEY) { // crosshair
-      crosshairToggle = -crosshairToggle;
-      crosshair(crosshairToggle);
+      crosshairToggle = !crosshairToggle;
     }
   }
 
@@ -236,25 +316,27 @@ function quad(a, b, c, d) {
   }
 }
 
-function crosshair(toggle) {
-  if (!toggle) { // don't show crosshair
-    points = [];
-    cube(); // reset points array
+var n = 1;
+var k = 0;
+function scaleMath() {
+  k = k + 0.10 * n;
+  if (k > 16.9) {
+    n = -1;
   }
-  else { // show crosshair, add points to array
-    for (var i = 0; i < 4; i++) {
-      points.push(crosshair_vertices[i]);
-    }
+  else if (k < 0.1) {
+    n = 1;
   }
+  return Math.floor(k);
 }
 
 function render() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
+  j += 1.6;
+  var sc = scaleMath();
   //cycle through 8 times to create each cube
   for (var i = 0; i < 8; i++) {
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-    gl.bindBuffer(gl.ARRAY_BUFFER, lBuffer);
+    // gl.bindBuffer(gl.ARRAY_BUFFER, lBuffer);
 
     var color_loc = gl.getUniformLocation(program, "vColor");
     var color = vec4(vertexColors[(i+cubeColor) % 8], 1.0);
@@ -263,20 +345,46 @@ function render() {
     var model_transform = mat4();
     model_transform = mult(model_transform, translate(cube_position[i]));
     model_transform = mult(model_transform, translate(xPos, yPos, zPos));
+    model_transform = mult(model_transform, rotate(j, rotationAxis[i]));
 
     projection_matrix = perspective(fovAngle, canvas.width / canvas.height, 0.001, 1000);
     projection_matrix = mult(projection_matrix, rotate(xAngle, 0, 1, 0));
 
     gl.uniformMatrix4fv(projection_transform_loc, false, flatten(projection_matrix));
-    gl.uniformMatrix4fv(model_transform_loc, false, flatten(model_transform));
+    // console.log(sc);
+    gl.uniformMatrix4fv(model_transform_loc, false, flatten(mult(model_transform, scale(scaleSelect[sc]))));
 
     gl.drawArrays(gl.TRIANGLES, 0, NumVertices);
 
     // outline the edges
+    // gl.bindBuffer(gl.ARRAY_BUFFER, lBuffer);
     color = vec4(1.0, 1.0, 1.0, 1.0);
     gl.uniform4fv(color_loc, color);
-    gl.lineWidth(2.5);
-    gl.drawArrays(gl.LINES, 0, 36);
+    gl.lineWidth(2);
+    gl.drawArrays(gl.LINES, 0, NumVertices);
+  }
+
+  // crosshair
+  if (crosshairToggle) {
+    chBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, chBuffer );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(crosshair_vertices), gl.STATIC_DRAW );
+    gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0 );
+
+    var ch_transform;
+    ch_transform = mat4();
+    ch_transform = mult(ch_transform, ortho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0));
+    gl.uniformMatrix4fv(model_transform_loc, false, flatten(ch_transform));
+
+    var color_loc = gl.getUniformLocation(program, "vColor");
+    color = vec4(1.0, 1.0, 1.0, 1.0);
+    gl.uniform4fv(color_loc, color);
+    gl.lineWidth(1);
+    gl.drawArrays(gl.LINES, 0, 4);
+
+    // rebind to draw cubes
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
   }
 
   requestAnimFrame( render );
