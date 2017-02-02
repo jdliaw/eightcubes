@@ -9,17 +9,17 @@ var colors = [];
 var points = [];
 var edge_vertices = [];
 var vPosition;
-
-var model_transform_loc;
-var camera_transform_loc;
-var projection_transform_loc;
-var projection_matrix;
-
 var program;
 var vBuffer;
 var lBuffer;
 var chBuffer;
 var j = 0;
+
+// global vars for vertex shader
+var model_transform_loc;
+var camera_transform_loc;
+var projection_transform_loc;
+var projection_matrix;
 
 // variables controlled by keys
 var yPos = 0;
@@ -72,6 +72,7 @@ var vertexColors = [
     [1.0, 0.0, 0.6, 0.5]   // pink
 ];
 
+// axis for cubes to rotate on
 var rotationAxis = [
   [1, 0, 0],
   [0, 1, 0],
@@ -83,6 +84,7 @@ var rotationAxis = [
   [1, 0, 0]
 ];
 
+// cycle through the values to scale up and down
 var scaleSelect = [
   [.82, .82, .82],
   [.84, .84, .84],
@@ -104,6 +106,7 @@ var scaleSelect = [
   [1.16, 1.16, 1.16]
 ];
 
+// vertices for crosshair
 var crosshair_vertices = [
   vec2(1.0, 0),
   vec2(-1.0, 0),
@@ -114,12 +117,13 @@ var crosshair_vertices = [
 window.onload = function init() {
   canvas = document.getElementById("gl-canvas");
 
+  // setup webgl
   gl = WebGLUtils.setupWebGL(canvas);
   if (!gl) {
     alert("WebGL isn't available.");
   }
 
-  cube();
+  cube(); // populate points for a cube
   outline(); // populate points for cube edges
 
   gl.viewport( 0, 0, canvas.width, canvas.height );
@@ -129,6 +133,7 @@ window.onload = function init() {
   program = initShaders(gl, "vertex-shader", "fragment-shader");
   gl.useProgram(program);
 
+  // push cube points to buffer
   vBuffer = gl.createBuffer();
   gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
   gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
@@ -137,7 +142,7 @@ window.onload = function init() {
   gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
   gl.enableVertexAttribArray( vPosition );
 
-  // crosshair points
+  // push crosshair points to buffer
   chBuffer = gl.createBuffer();
   gl.bindBuffer( gl.ARRAY_BUFFER, chBuffer );
   gl.bufferData( gl.ARRAY_BUFFER, flatten(crosshair_vertices), gl.STATIC_DRAW );
@@ -147,11 +152,10 @@ window.onload = function init() {
   gl.bindBuffer(gl.ARRAY_BUFFER, lBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, flatten(edge_vertices), gl.STATIC_DRAW);
 
+  // matrices to manipulate cubes on canvas
   model_transform_loc = gl.getUniformLocation(program, "model_transform");
   camera_transform_loc = gl.getUniformLocation(program, "camera_transform");
   gl.uniformMatrix4fv(camera_transform_loc, false, flatten(translate(0, 0, -50)));
-
-  //projection matrix
   projection_transform_loc = gl.getUniformLocation(program, "projection_transform");
 
   // key bindings
@@ -173,7 +177,7 @@ window.onload = function init() {
     if (key == RIGHT_KEY) { // azimuth right
       xAngle++;
     }
-    if (key == LEFT_KEY) {
+    if (key == LEFT_KEY) { // azimuth left
       xAngle--;
     }
 
@@ -216,7 +220,7 @@ window.onload = function init() {
       fovAngle--;
     }
 
-    if (key == PLUS_KEY || key == PLUS_KEY_CHROME) { // crosshair
+    if (key == PLUS_KEY || key == PLUS_KEY_CHROME) { // toggle crosshair
       crosshairToggle = !crosshairToggle;
     }
   }
@@ -232,14 +236,13 @@ function increaseRotationAmount() {
   j += 12;
 }
 
-function outline() {
+function outline() { // construct collection of points to create edge outline (different from cube that draws triangles)
   edges_quad(0, 3, 7, 4);
   edges_quad(4, 0, 1, 5);
   edges_quad(5, 4, 7, 6);
   edges_quad(6, 5, 1, 2);
   edges_quad(2, 3, 7, 6);
   edges_quad(6, 2, 3, 7);
-  // console.log(edge_vertices);
 }
 
 function edges_quad(a, b, c, d) {
@@ -254,14 +257,14 @@ function edges_quad(a, b, c, d) {
     vec4(  0.5, -0.5, -0.5, 1.0 )
   ];
 
-  var edge_indices = [a, b, c, d, a, b];
+  var edge_indices = [a, b, c, d, a, b]; // slight change in indices to get cube outline
 
   for (var i = 0; i < edge_indices.length; i++) {
     edge_vertices.push(vertices[edge_indices[i]]);
   }
 }
 
-function cube() {
+function cube() { // construct points for cube
   quad( 1, 0, 3, 2 );
   quad( 2, 3, 7, 6 );
   quad( 3, 0, 4, 7 );
@@ -291,7 +294,7 @@ function quad(a, b, c, d) {
 
 var n = 1;
 var k = 0;
-function scaleFunc() {
+function scaleFunc() { // function to calculate scaling
   k = k + 0.10 * n;
   if (k > 16.9) {
     n = -1;
@@ -310,15 +313,18 @@ function render() {
   for (var i = 0; i < 8; i++) {
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
 
+    // assign a different color to each cube, same color for all faces
     var color_loc = gl.getUniformLocation(program, "vColor");
     var color = vec4(vertexColors[(i+cubeColor) % 8], 1.0);
     gl.uniform4fv(color_loc, color);
 
+    // matrix to allow transform, rotate, scale
     var model_transform = mat4();
     model_transform = mult(model_transform, translate(cube_position[i]));
     model_transform = mult(model_transform, translate(xPos, yPos, zPos));
     model_transform = mult(model_transform, rotate(j, rotationAxis[i]));
 
+    // projection matrix can rotate as with key bindings
     projection_matrix = perspective(fovAngle, canvas.width / canvas.height, 0.001, 1000);
     projection_matrix = mult(projection_matrix, rotate(xAngle, 0, 1, 0));
 
@@ -328,26 +334,27 @@ function render() {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, NumVertices); // Triangle strip for extra credit
 
     // outline the edges
-    gl.bindBuffer(gl.ARRAY_BUFFER, lBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, lBuffer); // grab buffer with line points
     gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
-    color = vec4(1.0, 1.0, 1.0, 1.0);
+    color = vec4(1.0, 1.0, 1.0, 1.0); // white color outline
     gl.uniform4fv(color_loc, color);
     gl.lineWidth(2);
-    gl.drawArrays(gl.LINES, 0, NumVertices);
+    gl.drawArrays(gl.LINES, 0, NumVertices); // draw as lines
   }
 
   // crosshair
   if (crosshairToggle) {
-    gl.bindBuffer( gl.ARRAY_BUFFER, chBuffer );
+    gl.bindBuffer( gl.ARRAY_BUFFER, chBuffer ); // grab buffer with crosshair points
     gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0 );
 
+    // crosshair is orthogonal, use a matrix to transform
     var ch_transform;
     ch_transform = mat4();
     ch_transform = mult(ch_transform, ortho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0));
     gl.uniformMatrix4fv(model_transform_loc, false, flatten(ch_transform));
 
     var color_loc = gl.getUniformLocation(program, "vColor");
-    color = vec4(1.0, 1.0, 1.0, 1.0);
+    color = vec4(1.0, 1.0, 1.0, 1.0); // white crosshair
     gl.uniform4fv(color_loc, color);
     gl.lineWidth(1);
     gl.drawArrays(gl.LINES, 0, 4);
@@ -360,7 +367,7 @@ function render() {
   requestAnimFrame( render );
 }
 
-function position(deg, direction) {
+function position(deg, direction) { // function to calculate position for ijkm key
   //get input degree within 360 degrees.
   var degree = deg;
   degree = degree % 360;
