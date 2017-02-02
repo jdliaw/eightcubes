@@ -2,7 +2,8 @@
 
 ### Jennifer Liaw 004454638
 
-#### Please grade the version tagged v1.3
+#### Please grade the version tagged v1.4
+    Used e.keyCode for key bindings, which is known to be deprecated, but it worked fine on my browsers. Hope this is not a problem.
 
 #### What was implemented?
     (1) Display a WebGL canvas without error

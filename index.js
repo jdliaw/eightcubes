@@ -228,8 +228,8 @@ window.onload = function init() {
   render();
 
   // for 20rpm rotations
-  setInterval(render, 100); // call render every 100ms
-  setInterval(increaseRotationAmount, 100); // increase degree by 12 every time
+  // setInterval(render, 100); // call render every 100ms
+  // setInterval(increaseRotationAmount, 100); // increase degree by 12 every time
 }
 
 function increaseRotationAmount() {
@@ -307,7 +307,7 @@ function scaleFunc() { // function to calculate scaling
 
 function render() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  // j += 1.6;
+  j += 1.75;
   var sc = scaleFunc();
   //cycle through 8 times to create each cube
   for (var i = 0; i < 8; i++) {
