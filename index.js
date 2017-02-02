@@ -470,4 +470,6 @@ function position(deg, direction) { // function to calculate position for ijkm k
         adjustedZ = Math.cos(rad);
     }
   }
+  adjustedX *= 0.25;
+  adjustedZ *= 0.25;
 }
